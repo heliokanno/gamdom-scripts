@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    </head>
+
+    <body>
+        <div id="app" class="container">
+            <h1 class="text-center">Calculadora</h1>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <form>
+                        <div class="form-group">
+                            <label for="balance">Saldo</label>
+                            <input id="balance" type="number" class="form-control" v-model="balance"></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="cashout">Cashout (Crahs: 10x, Joker: 24x)</label>
+                            <input id="cashout" type="number" class="form-control" v-model="cashout"></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="firstBet">Aposta inicial</label>
+                            <input id="firstBet" type="number" class="form-control" v-model="firstBet"></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="changeTurn">Trocar aposta após (Nº turnos)</label>
+                            <input id="changeTurn" type="number" class="form-control" v-model="changeTurn"></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="multiplier">Multiplicar por</label>
+                            <input id="multiplier" type="number" class="form-control" v-model="multiplier"></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="round">Arredondar</label>
+                            <select id="round" class="form-control" v-model="round">
+                                <option value="false">Não</option>
+                                <option value="true">Sim</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block" @click="calculate()">Calcular</button>
+                    </form>
+                </div>
+
+                <div id="tableDiv" class="col-md-12">
+                    <br>
+                    <table class="table table-striped" style="text-align: center;">
+                        <thead>
+                            <th>#</th>
+                            <th>Aposta</th>
+                            <th>Na perda</th>
+                            <th>Na vitória</th>
+                        </thead>
+                        <tbody>
+                            <tr v-for="game in games">
+                                <td>{{game.turn}}</td>
+                                <td>{{game.bet}}</td>
+                                <td style="color: red;">{{game.loss}}</td>
+                                <td :style="getStyle(game.win)">{{game.win}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script type = "text/javascript">
+            let vm = new Vue({
+                el: '#app',
+                data: {
+                   balance: null,
+                   cashout: null,
+                   firstBet: null,
+                   changeTurn: null,
+                   multiplier: null,
+                   round: false,
+                   games: []
+                },
+                methods: {
+                    getStyle(balance) {
+                        if (balance === 0) {
+                            return {}
+                        }
+
+                        return {color: balance < 0 ? 'red' : 'green'} 
+                    },
+                    calculate() {
+                        let lossBalance = 0
+                        let currentBet = parseInt(this.firstBet)
+                        let currentTurn = 0
+
+                        this.games = [];
+                        while (lossBalance + currentBet < this.balance) {
+                            lossBalance = lossBalance + currentBet
+                            this.games.push({
+                              turn: currentTurn + 1,
+                              bet: currentBet,
+                              loss: lossBalance,
+                              win: this.calculateProfit(currentBet, lossBalance, this.cashout)
+                            })
+                            currentTurn++;
+                            currentBet = this.nextBet(currentBet, currentTurn, this.changeTurn, parseFloat(this.multiplier), this.round)
+                        }
+                    },
+                    nextBet(currentBet, turn, changeTurn, multiplier, round) {
+                      if (turn != 0 && turn % changeTurn === 0) {
+                        if (round) {
+                            return currentBet = Math.round(currentBet * multiplier)
+                        }
+                        return Math.round(currentBet * multiplier)
+                      }
+                      return currentBet;
+                    },
+                    calculateProfit(currentBet, lossBalance, cashout) {
+                      return Math.round(
+                        (currentBet * cashout) - lossBalance - currentBet
+                      )
+                    }
+                }
+             })
+        </script>
+    </body>
+</html>

@@ -27,7 +27,7 @@
                         <label for="numOfGames">Número de jogos (Jogos anteriores ao do hash informado)</label>
                         <input id="numOfGames" type="number" value="5000" class="form-control" v-model="numOfGames"></input>
                     </div>
-                    <button type="button" class="btn btn-primary btn-block" @click="extractHistory()">Gerar</button>
+                    <button type="button" class="btn btn-primary btn-block" @click="extractHistory()">Processar</button>
                 </form>
             </div>
             <div id="tableDiv" class="col-md-12">
@@ -54,9 +54,9 @@
          let vm = new Vue({
             el: '#app',
             data: {
-               hash: '8a01c136c326a7e6225c952bc61057a3f3223d08e9153f31fc76188d0f5d98d3',
-               crashPoint: 10,
-               numOfGames: 30,
+               hash: null,
+               crashPoint: null,
+               numOfGames: null,
                results: []
             },
             methods: {
@@ -66,11 +66,6 @@
                 extractHistory() {
                     const games = this.getGames(this.hash, this.numOfGames)
                     this.results = this.generateResults(games, this.crashPoint)
-                    //console.log(this.hash)
-                    //console.log(this.crashPoint)
-                    //console.log(this.numOfGames)
-                    //console.log(games)
-                    //console.log(this.results)
                 },
                 generateResults(games, crashPoint) {
                     let count = 0
