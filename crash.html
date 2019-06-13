@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+</head>
+
+<body>
+    <div id="app" class="container">
+        <h1 class="text-center">Crash</h1>
+
+        <div class="row">
+            <div class="col-md-12">
+                <form>
+                    <div class="form-group">
+                        <label for="hash">Hash do jogo</label>
+                        <input id="hash" type="text" class="form-control" v-model="hash"></input>
+                    </div>
+                    <div class="form-group">
+                        <label for="crashPoint">Crash (x)</label>
+                        <input id="crashPoint" type="number" class="form-control" v-model="crashPoint"></input>
+                    </div>
+                    <div class="form-group">
+                        <label for="numOfGames">Número de jogos (Jogos anteriores ao do hash informado)</label>
+                        <input id="numOfGames" type="number" value="5000" class="form-control" v-model="numOfGames"></input>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" @click="extractHistory()">Gerar</button>
+                </form>
+            </div>
+            <div id="tableDiv" class="col-md-12">
+                <br>
+                <table class="table">
+                    <tbody>
+                        <tr style="background-color: rgba(0,0,0,.075)">
+                            <th scope="row" width="25%">
+                                Estatística por turnos: (Crash: {{crashPoint}}x)
+                            </th>
+                            <td style="text-align: left;" width="75%">
+                                <span v-for="(result, index) in results" :class="getClass(result.turns)" style="font-weight: bold;">
+                                    {{index < results.length -1 ? result.turns + ',' : result.turns}}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type = "text/javascript">
+         let vm = new Vue({
+            el: '#app',
+            data: {
+               hash: '8a01c136c326a7e6225c952bc61057a3f3223d08e9153f31fc76188d0f5d98d3',
+               crashPoint: 10,
+               numOfGames: 30,
+               results: []
+            },
+            methods: {
+                getClass(size) {
+                    return {'text-danger': size > 20} 
+                },
+                extractHistory() {
+                    const games = this.getGames(this.hash, this.numOfGames)
+                    this.results = this.generateResults(games, this.crashPoint)
+                    //console.log(this.hash)
+                    //console.log(this.crashPoint)
+                    //console.log(this.numOfGames)
+                    //console.log(games)
+                    //console.log(this.results)
+                },
+                generateResults(games, crashPoint) {
+                    let count = 0
+                    const history = []
+                    games.forEach(function (value) {
+                        let crash = parseFloat(value)
+                        if (value > crashPoint) {
+                            history.push({crash: crash, turns: count})
+                            count = 0
+                        } else {
+                            count++
+                        }
+                    })
+                    return history
+                },
+                getGames(hash, numOfGames) {
+                    let lastHash = hash
+                    const crashes = []
+                    for (let i = 0; i < numOfGames; i++) {
+                        let gameHash = (lastHash != '' ? this.genGameHash(lastHash) : '')
+                        let crash = this.crashPointFromHash((lastHash != '' ? this.genGameHash(lastHash) : ''))
+                        crashes.push(crash)
+                        lastHash = gameHash
+                    }
+                    return crashes
+                },
+
+                divisible(hash, mod) {
+                    // So ABCDEFGHIJ should be chunked like  AB CDEF GHIJ
+                    let val = 0;
+
+                    let o = hash.length % 4
+                    for (let i = o > 0 ? o - 4 : 0; i < hash.length; i += 4) {
+                        val = ((val << 16) + parseInt(hash.substring(i, i + 4), 16)) % mod
+                    }
+
+                    return val === 0
+                },
+                genGameHash(serverSeed) {
+                    return CryptoJS.SHA256(serverSeed).toString()
+                },
+                hmac(key, v) {
+                    let hmacHasher = CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, key)
+                    return hmacHasher.finalize(v).toString()
+                },
+                crashPointFromHash(serverSeed) {
+                    // see: provably fair seeding event
+                    let hash = this.hmac(serverSeed, '000000000000000007a9a31ff7f07463d91af6b5454241d5faf282e5e0fe1b3a');
+
+                    // In 4 of 100 games the game crashes instantly.
+                    if (this.divisible(hash, 25)) {
+                        return (1.00).toFixed(2)
+                    }
+
+                    // Use the most significant 52-bit from the hash to calculate the crash point
+                    let h = parseInt(hash.slice(0, 52 / 4), 16)
+                    let e = Math.pow(2, 52)
+
+                    return (Math.floor(((e - h / 50) / (e - h)) * 100) / 100).toFixed(2)
+                }
+            }
+         })
+    </script>
+</body>
+</html>
