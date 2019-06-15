@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -30,13 +31,13 @@
                     <button type="button" class="btn btn-primary btn-block" @click="extractHistory()">Processar</button>
                 </form>
             </div>
-            <div id="tableDiv" class="col-md-12">
+            <div class="col-md-12">
                 <br>
-                <table class="table">
+                <table class="table" v-if="results.length > 0">
                     <tbody>
                         <tr style="background-color: rgba(0,0,0,.075)">
                             <th scope="row" width="25%">
-                                Estatística por turnos: (Crash: {{crashPoint}}x)
+                                Ocorrência de {{crashPoint}}x nos turnos:
                             </th>
                             <td style="text-align: left;" width="75%">
                                 <span v-for="(result, index) in results" :class="getClass(result.turns)" style="font-weight: bold;">
@@ -61,11 +62,11 @@
             },
             methods: {
                 getClass(size) {
-                    return {'text-danger': size > 20} 
+                    return {'text-danger': size > 40}
                 },
                 extractHistory() {
-                    const games = this.getGames(this.hash, this.numOfGames)
-                    this.results = this.generateResults(games, this.crashPoint)
+                    const games = this.getGames(this.hash, parseInt(this.numOfGames))
+                    this.results = this.generateResults(games, parseFloat(this.crashPoint))
                 },
                 generateResults(games, crashPoint) {
                     let count = 0
@@ -96,12 +97,10 @@
                 divisible(hash, mod) {
                     // So ABCDEFGHIJ should be chunked like  AB CDEF GHIJ
                     let val = 0;
-
                     let o = hash.length % 4
                     for (let i = o > 0 ? o - 4 : 0; i < hash.length; i += 4) {
                         val = ((val << 16) + parseInt(hash.substring(i, i + 4), 16)) % mod
                     }
-
                     return val === 0
                 },
                 genGameHash(serverSeed) {
@@ -113,7 +112,7 @@
                 },
                 crashPointFromHash(serverSeed) {
                     // see: provably fair seeding event
-                    let hash = this.hmac(serverSeed, '000000000000000007a9a31ff7f07463d91af6b5454241d5faf282e5e0fe1b3a');
+                    let hash = this.hmac(serverSeed, '000000000000000007a9a31ff7f07463d91af6b5454241d5faf282e5e0fe1b3a')
 
                     // In 4 of 100 games the game crashes instantly.
                     if (this.divisible(hash, 25)) {

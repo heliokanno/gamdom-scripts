@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
     	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -44,9 +45,9 @@
                     </form>
                 </div>
 
-                <div id="tableDiv" class="col-md-12">
+                <div class="col-md-12">
                     <br>
-                    <table class="table table-striped" style="text-align: center;">
+                    <table class="table table-striped" style="text-align: center;" v-if="games.length > 0">
                         <thead>
                             <th>#</th>
                             <th>Aposta</th>
@@ -70,11 +71,11 @@
             let vm = new Vue({
                 el: '#app',
                 data: {
-                   balance: null,
-                   cashout: null,
-                   firstBet: null,
-                   changeTurn: null,
-                   multiplier: null,
+                   balance: 10,
+                   cashout: 5,
+                   firstBet: 2,
+                   changeTurn: 1,
+                   multiplier: 2,
                    round: false,
                    games: []
                 },
@@ -83,7 +84,6 @@
                         if (balance === 0) {
                             return {}
                         }
-
                         return {color: balance < 0 ? 'red' : 'green'} 
                     },
                     calculate() {
@@ -91,16 +91,17 @@
                         let currentBet = parseInt(this.firstBet)
                         let currentTurn = 0
 
-                        this.games = [];
+                        this.games = []
                         while (lossBalance + currentBet < this.balance) {
+                            let profit = this.calculateProfit(currentBet, lossBalance, this.cashout)
                             lossBalance = lossBalance + currentBet
                             this.games.push({
                               turn: currentTurn + 1,
                               bet: currentBet,
                               loss: lossBalance,
-                              win: this.calculateProfit(currentBet, lossBalance, this.cashout)
+                              win: profit
                             })
-                            currentTurn++;
+                            currentTurn++
                             currentBet = this.nextBet(currentBet, currentTurn, this.changeTurn, parseFloat(this.multiplier), this.round)
                         }
                     },
