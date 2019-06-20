@@ -34,10 +34,10 @@
                 <tbody>
                 <tr style="background-color: rgba(0,0,0,.075)">
                     <th scope="row" width="30%">
-                        Ocorrência de coringa nos turnos:
+                        Ocorrência de [Coringa] nos turnos:
                     </th>
                     <td style="text-align: left;" width="70%">
-                        <span v-for="(turn, index) in result.jokers" :class="getClass(turn)"
+                        <span v-for="(turn, index) in result.jokers" :style="getStyle(turn)"
                               style="font-weight: bold;">
                             {{index < result.jokers.length -1 ? turn + ',' : turn}}
                         </span>
@@ -45,11 +45,51 @@
                 </tr>
                 <tr style="background-color: rgba(0,0,0,.075)">
                     <th scope="row" width="30%">
-                        Total de coringa(s):
+                        Ocorrência de [A] nos turnos:
+                    </th>
+                    <td style="text-align: left;" width="70%">
+                        <span v-for="(turn, index) in result.as" :style="getStyle(turn)" style="font-weight: bold;">
+                            {{index < result.as.length -1 ? turn + ',' : turn}}
+                        </span>
+                    </td>
+                </tr>
+                <tr style="background-color: rgba(0,0,0,.075)">
+                    <th scope="row" width="30%">
+                        Maior turno de [Coringa]:
+                    </th>
+                    <td style="text-align: left;" width="70%">
+                        <span :style="getStyle(result.greatJoker)" style="font-weight: bold;">
+                            {{result.greatJoker}}
+                        </span>
+                    </td>
+                </tr>
+                <tr style="background-color: rgba(0,0,0,.075)">
+                    <th scope="row" width="30%">
+                        Maior turno de [A]:
+                    </th>
+                    <td style="text-align: left;" width="70%">
+                        <span :style="getStyle(result.greatA)" style="font-weight: bold;">
+                            {{result.greatA}}
+                        </span>
+                    </td>
+                </tr>
+                <tr style="background-color: rgba(0,0,0,.075)">
+                    <th scope="row" width="30%">
+                        Total de [Coringa]:
                     </th>
                     <td style="text-align: left;" width="70%">
                         <span style="font-weight: bold;">
                             {{result.countJoker}}
+                        </span>
+                    </td>
+                </tr>
+                <tr style="background-color: rgba(0,0,0,.075)">
+                    <th scope="row" width="30%">
+                        Total de [A]:
+                    </th>
+                    <td style="text-align: left;" width="70%">
+                        <span style="font-weight: bold;">
+                            {{result.countA}}
                         </span>
                     </td>
                 </tr>
@@ -104,7 +144,7 @@
         el: '#app',
         data: {
             hash: null,
-            numOfGames: null,
+            numOfGames: 1000,
             result: null
         },
         computed: {
@@ -123,8 +163,14 @@
             }
         },
         methods: {
-            getClass(size) {
-                return {'text-danger': size > 40}
+            getStyle(size) {
+                if (size <= 15) {
+                    return {'color': '#34b443 !important'}
+                } else if (size > 15 && size < 100) {
+                    return {'color': '#e76535 !important'}
+                } else if (size >= 100) {
+                    return {'color': '#b51f09 !important'}
+                }
             },
             extractHistory() {
                 const games = this.getGames(this.hash, parseInt(this.numOfGames))
@@ -133,19 +179,27 @@
             generateResults(games) {
                 const result = {
                     countJoker: 0,
+                    countA: 0,
                     countRed: 0,
                     countBlack: 0,
                     countNumbers: 0,
                     countLettres: 0,
-                    jokers: []
+                    greatJoker: 0,
+                    greatA: 0,
+                    jokers: [],
+                    as: []
                 }
 
                 let lastJoker = 0
+                let lastA = 0
                 games.forEach(function (value) {
                     let number = value.result.number
                     let color = value.result.color
 
                     if (color === 'joker') {
+                        if (result.greatJoker < lastJoker) {
+                            result.greatJoker = lastJoker
+                        }
                         result.jokers.push(lastJoker)
                         lastJoker = 0
                         result.countJoker++
@@ -156,6 +210,17 @@
                             result.countBlack++
                         }
                         lastJoker++
+                    }
+
+                    if ('A' === number) {
+                        if (result.greatA < lastA) {
+                            result.greatA = lastA
+                        }
+                        result.as.push(lastA)
+                        lastA = 0
+                        result.countA++
+                    } else {
+                        lastA++
                     }
 
                     if ('J' === number || 'Q' === number || 'K' === number || 'A' === number) {

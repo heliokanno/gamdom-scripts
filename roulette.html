@@ -37,9 +37,19 @@
                         Ocorrência de verde nos turnos:
                     </th>
                     <td style="text-align: left;" width="75%">
-                        <span v-for="(turn, index) in result.greens" :class="getClass(turn)"
+                        <span v-for="(turn, index) in result.greens" :style="getStyle(turn)"
                               style="font-weight: bold;">
                             {{index < result.greens.length -1 ? turn + ',' : turn}}
+                        </span>
+                    </td>
+                </tr>
+                <tr style="background-color: rgba(0,0,0,.075)">
+                    <th scope="row" width="30%">
+                        Maior turno de [Verde]:
+                    </th>
+                    <td style="text-align: left;" width="70%">
+                        <span :style="getStyle(result.greatGreen)" style="font-weight: bold;">
+                            {{result.greatGreen}}
                         </span>
                     </td>
                 </tr>
@@ -83,13 +93,19 @@
     let vm = new Vue({
         el: '#app',
         data: {
-            hash: 'bc448abe1377a7defcde67da56e12cfd96569f4f725eee899772fcb89bc8f043',
-            numOfGames: 100,
+            hash: null,
+            numOfGames: 1000,
             result: null
         },
         methods: {
-            getClass(size) {
-                return {'text-danger': size > 40}
+            getStyle(size) {
+                if (size <= 15) {
+                    return {'color': '#34b443 !important'}
+                } else if (size > 15 && size < 100) {
+                    return {'color': '#e76535 !important'}
+                } else if (size >= 100) {
+                    return {'color': '#b51f09 !important'}
+                }
             },
             extractHistory() {
                 const games = this.getGames(this.hash, parseInt(this.numOfGames))
@@ -100,6 +116,7 @@
                     countGreen: 0,
                     countRed: 0,
                     countBlack: 0,
+                    greatGreen: 0,
                     greens: []
                 }
 
@@ -107,6 +124,9 @@
                 games.forEach(function (value) {
                     let number = parseInt(value);
                     if (number == 0) {
+                        if (result.greatGreen < lastGreen) {
+                            result.greatGreen = lastGreen
+                        }
                         result.greens.push(lastGreen)
                         lastGreen = 0
                         result.countGreen++

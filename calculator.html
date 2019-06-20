@@ -71,11 +71,11 @@
             let vm = new Vue({
                 el: '#app',
                 data: {
-                   balance: 10,
-                   cashout: 5,
-                   firstBet: 2,
-                   changeTurn: 1,
-                   multiplier: 2,
+                   balance: null,
+                   cashout: null,
+                   firstBet: null,
+                   changeTurn: null,
+                   multiplier: null,
                    round: false,
                    games: []
                 },
@@ -93,12 +93,12 @@
 
                         this.games = []
                         while (lossBalance + currentBet < this.balance) {
-                            let profit = this.calculateProfit(currentBet, lossBalance, this.cashout)
-                            lossBalance = lossBalance + currentBet
+                            let profit = this.calculateProfit(Math.round(currentBet), lossBalance, this.cashout)
+                            lossBalance = lossBalance + Math.round(currentBet)
                             this.games.push({
                               turn: currentTurn + 1,
-                              bet: currentBet,
-                              loss: lossBalance,
+                              bet: Math.round(currentBet),
+                              loss: Math.round(lossBalance),
                               win: profit
                             })
                             currentTurn++
@@ -110,7 +110,7 @@
                         if (round) {
                             return currentBet = Math.round(currentBet * multiplier)
                         }
-                        return Math.round(currentBet * multiplier)
+                        return currentBet * multiplier
                       }
                       return currentBet;
                     },
